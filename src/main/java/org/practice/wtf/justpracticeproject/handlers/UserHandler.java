@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,15 +32,14 @@ public class UserHandler {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody @Valid CustomUser customUser) {
-        userRepository.findByUserName(customUser.getUserName()).flatMap(user -> {
+        customUser.setAuthorities(Role.USER.getAuthorities());
+        customUser.setPassword(bCryptPasswordEncoder.encode(customUser.getPassword()));
+        var saved = userRepository.save(customUser);
+        userRepository.findByUserName(customUser.getUserName()).handle((user, sink) -> {
             if (user != null) {
-                return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "User witch such username exists: " + customUser.getUserName()));
-            } else {
-                customUser.setPassword(bCryptPasswordEncoder.encode(customUser.getPassword()));
-                customUser.setAuthorities(List.of(new SimpleGrantedAuthority("ROLE_" + Role.USER.name())));
-                return userRepository.save(customUser);
+                sink.error(new ResponseStatusException(HttpStatus.CONFLICT, "USER IS THERE"));
             }
-        }).subscribe(log::info);
+        }).then(saved).subscribe(log::info);
         return new ResponseEntity<>("User: " + customUser.getUserName() + " created", HttpStatus.CREATED);
     }
 

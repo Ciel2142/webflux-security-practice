@@ -16,8 +16,9 @@ public class CustomUserDetailService implements ReactiveUserDetailsService {
 
     @Override
     public Mono<UserDetails> findByUsername(String s) {
+        // Wasn't able to throw exception and it in postman, only 401 if user doesn't exists or wrong user
         return userRepository.findByUserName(s).
-                switchIfEmpty(Mono.error(new UsernameNotFoundException("Username: " + s + " not found"))).
-                map(CustomUserDetail::new);
+                map(CustomUserDetail::new).
+                map(UserDetails.class::cast);
     }
 }

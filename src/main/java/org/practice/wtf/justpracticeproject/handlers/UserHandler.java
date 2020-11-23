@@ -9,8 +9,6 @@ import org.practice.wtf.justpracticeproject.security.roles.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
-import java.util.List;
+
 
 @RequiredArgsConstructor
 @RestController
@@ -31,25 +29,24 @@ public class UserHandler {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody @Valid CustomUser customUser) {
+    public Mono<ResponseEntity<?>> registerUser(@RequestBody @Valid CustomUser customUser) {
         customUser.setAuthorities(Role.USER.getAuthorities());
         customUser.setPassword(bCryptPasswordEncoder.encode(customUser.getPassword()));
         var saved = userRepository.save(customUser);
-        userRepository.findByUserName(customUser.getUserName()).handle((user, sink) -> {
-            if (user != null) {
-                sink.error(new ResponseStatusException(HttpStatus.CONFLICT, "USER IS THERE"));
-            }
-        }).then(saved).subscribe(log::info);
-        return new ResponseEntity<>("User: " + customUser.getUserName() + " created", HttpStatus.CREATED);
+        return userRepository.
+                findByUserName(customUser.getUserName()).
+                doOnSuccess(user -> {throw new ResponseStatusException(HttpStatus.CONFLICT);}).
+                then(saved).
+                thenReturn(new ResponseEntity<>(HttpStatus.CREATED));
     }
 
     @GetMapping("/admin")
-    public String getAdmin(@AuthenticationPrincipal CustomUserDetail customUserDetail) {
-        return "Hello admin: " + customUserDetail.getUsername();
+    public Mono<String> getAdmin(@AuthenticationPrincipal CustomUserDetail customUserDetail) {
+        return Mono.just("Hello admin: " + customUserDetail.getUsername());
     }
 
     @GetMapping("/user")
-    public String getUser(@AuthenticationPrincipal CustomUserDetail customUserDetail) {
-        return "Hello user: " + customUserDetail.getUsername();
+    public Mono<String> getUser(@AuthenticationPrincipal CustomUserDetail customUserDetail) {
+        return Mono.just("Hello user: " + userRepository.findByUserName(customUserDetail.getUsername()));
     }
 }

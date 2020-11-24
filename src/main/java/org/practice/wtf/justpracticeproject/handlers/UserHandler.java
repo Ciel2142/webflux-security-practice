@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
+import java.util.Objects;
 
 
 @RequiredArgsConstructor
@@ -35,9 +36,14 @@ public class UserHandler {
         var saved = userRepository.save(customUser);
         return userRepository.
                 findByUserName(customUser.getUserName()).
-                doOnSuccess(user -> {throw new ResponseStatusException(HttpStatus.CONFLICT);}).
+                doOnSuccess(user -> {
+                    if (user != null) {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT);
+                    }
+                }).
                 then(saved).
                 thenReturn(new ResponseEntity<>(HttpStatus.CREATED));
+
     }
 
     @GetMapping("/admin")

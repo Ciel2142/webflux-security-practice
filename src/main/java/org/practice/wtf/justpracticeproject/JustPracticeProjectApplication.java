@@ -19,7 +19,6 @@ public class JustPracticeProjectApplication {
     }
 }
 
-
 @Component
 @RequiredArgsConstructor
 @Log4j2

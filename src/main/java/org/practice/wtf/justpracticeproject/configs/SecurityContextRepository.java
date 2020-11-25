@@ -1,5 +1,7 @@
 package org.practice.wtf.justpracticeproject.configs;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
@@ -10,12 +12,11 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Component
+@RequiredArgsConstructor
+@Log4j2
 public class SecurityContextRepository implements ServerSecurityContextRepository {
-    private final AuthenticationManager authenticationManager;
 
-    public SecurityContextRepository(AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
-    }
+    private final AuthenticationManager authenticationManager;
 
     @Override
     public Mono<Void> save(ServerWebExchange exchange, SecurityContext context) {
@@ -24,7 +25,7 @@ public class SecurityContextRepository implements ServerSecurityContextRepositor
 
     @Override
     public Mono<SecurityContext> load(ServerWebExchange exchange) {
-        System.out.println("RERERERER");
+        log.info("Loading exchange");
         String authHeader = exchange.getRequest()
                 .getHeaders()
                 .getFirst(HttpHeaders.AUTHORIZATION);
@@ -38,8 +39,7 @@ public class SecurityContextRepository implements ServerSecurityContextRepositor
                     .authenticate(auth)
                     .map(SecurityContextImpl::new);
         }
-        System.out.println("FAILED");
-        System.out.println(authHeader);
+        log.info("FAILED");
         return Mono.empty();
     }
 }

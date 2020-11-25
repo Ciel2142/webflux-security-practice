@@ -9,12 +9,14 @@ import org.practice.wtf.justpracticeproject.security.roles.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromPublisher;
@@ -24,6 +26,7 @@ import static org.springframework.web.reactive.function.BodyInserters.fromPublis
 @Component
 public class RegistrationAndAuthenticationHandler {
 
+    public static final Mono<ServerResponse> SERVER_RESPONSE_MONO = ServerResponse.status(HttpStatus.UNAUTHORIZED).build();
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtUtils jwtUtils;
@@ -47,9 +50,9 @@ public class RegistrationAndAuthenticationHandler {
                             if (bCryptPasswordEncoder.matches(user.getPassword(), userDb.getPassword())) {
                                 return ServerResponse.ok().body(fromPublisher(Mono.just("Bearer " + jwtUtils.generateToken(userDb)), String.class));
                             } else {
-                                return ServerResponse.status(HttpStatus.UNAUTHORIZED).build();
+                                return SERVER_RESPONSE_MONO;
                             }
-                        })).switchIfEmpty(ServerResponse.status(HttpStatus.UNAUTHORIZED).build());
+                        })).switchIfEmpty(SERVER_RESPONSE_MONO);
     }
 
     public Mono<ServerResponse> getUserName(ServerRequest request) {
@@ -64,12 +67,12 @@ public class RegistrationAndAuthenticationHandler {
                     return ServerResponse.ok().body(Mono.just(name), String.class);
                 });
     }
-
+    
     public Mono<ServerResponse> getUser(ServerRequest request) {
         final String userName = request.queryParam("userName").orElse("parasite@mail.ru");
         return userRepository.
                 findByUserName(userName).
-                switchIfEmpty(Mono.error(new UsernameNotFoundException(userName))).
+                switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Username not found: " + userName))).
                 flatMap(user -> ServerResponse.ok().
                         contentType(MediaType.APPLICATION_JSON).
                         body(Mono.just(user), CustomUser.class));

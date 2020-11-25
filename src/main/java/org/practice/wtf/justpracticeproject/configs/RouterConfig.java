@@ -10,7 +10,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 @Configuration
 @Log4j2
-class EndPointConfig {
+public class RouterConfig {
 
     @Bean
     RouterFunction<?> routeRegistration(RegistrationAndAuthenticationHandler handle) {

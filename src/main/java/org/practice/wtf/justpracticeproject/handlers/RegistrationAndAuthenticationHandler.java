@@ -48,7 +48,7 @@ public class RegistrationAndAuthenticationHandler {
         return request.bodyToMono(CustomUser.class).flatMap(user -> userRepository.findByUserName(user.getUserName()).
                         flatMap(userDb -> {
                             if (bCryptPasswordEncoder.matches(user.getPassword(), userDb.getPassword())) {
-                                return ServerResponse.ok().body(fromPublisher(Mono.just("Bearer " + jwtUtils.generateToken(userDb)), String.class));
+                                return ServerResponse.ok().header("Authorization", "Bearer " + jwtUtils.generateToken(userDb)).build();
                             } else {
                                 return SERVER_RESPONSE_MONO;
                             }

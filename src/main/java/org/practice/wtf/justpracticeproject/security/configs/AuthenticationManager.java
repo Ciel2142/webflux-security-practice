@@ -1,8 +1,9 @@
-package org.practice.wtf.justpracticeproject.configs;
+package org.practice.wtf.justpracticeproject.security.configs;
 
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.practice.wtf.justpracticeproject.configs.JwtUtils;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

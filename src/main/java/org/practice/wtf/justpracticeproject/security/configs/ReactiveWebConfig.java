@@ -1,7 +1,5 @@
 package org.practice.wtf.justpracticeproject.security.configs;
 
-import org.practice.wtf.justpracticeproject.configs.AuthenticationManager;
-import org.practice.wtf.justpracticeproject.configs.SecurityContextRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
@@ -45,7 +43,7 @@ public class ReactiveWebConfig {
                 .authenticationManager(authenticationManager)
                 .securityContextRepository(securityContextRepository)
                 .authorizeExchange()
-                .pathMatchers("/", "/login", "/favicon.ico").permitAll()
+                .pathMatchers("/", "/login","/register", "/favicon.ico").permitAll()
                 .pathMatchers("/controller").hasRole("ADMIN")
                 .anyExchange().authenticated()
                 .and()

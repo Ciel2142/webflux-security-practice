@@ -1,4 +1,4 @@
-package org.practice.wtf.justpracticeproject.configs;
+package org.practice.wtf.justpracticeproject.security.configs;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

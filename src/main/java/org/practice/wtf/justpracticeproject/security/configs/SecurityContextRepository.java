@@ -20,7 +20,7 @@ public class SecurityContextRepository implements ServerSecurityContextRepositor
 
     @Override
     public Mono<Void> save(ServerWebExchange exchange, SecurityContext context) {
-        throw new IllegalStateException("Save method not supported!");
+        throw new UnsupportedOperationException("Saving context is not supported");
     }
 
     @Override

@@ -15,6 +15,7 @@ public class RouterConfig {
     @Bean
     RouterFunction<?> routeRegistration(RegistrationAndAuthenticationHandler handle) {
         return route().
+                GET("/controller", handle::handleController).
                 POST("/register", handle::handleUserRegistration).
                 POST("/login", handle::login).
                 GET("/myName", handle::getUserName).

@@ -13,11 +13,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
+import org.springframework.validation.FieldError;
 import org.springframework.validation.Validator;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
+
+import java.util.stream.Collectors;
 
 @Log4j2
 @RequiredArgsConstructor
@@ -30,24 +34,27 @@ public class RegistrationAndAuthenticationHandler {
     private final JwtUtils jwtUtils;
     private final Validator validator;
 
+    public Mono<ServerResponse> handleController(ServerRequest request) {
+        return ServerResponse.ok().body(BodyInserters.fromValue("Hello"));
+    }
+
     public Mono<ServerResponse> handleUserRegistration(ServerRequest request) {
         return request.
                 bodyToMono(CustomUser.class).
-                map(user -> {
+                flatMap(user -> {
                     Errors errors = new BeanPropertyBindingResult(
                             user,
                             CustomUser.class.getName()
                     );
                     validator.validate(user, errors);
                     if (!errors.getAllErrors().isEmpty()) {
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, errors.getAllErrors().toString());
+                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, errors.getAllErrors().toString()));
                     }
                     user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
                     user.setAuthorities(Role.USER.getAuthorities());
-                    return user;
+                    return userRepository.save(user);
                 }).
-                doOnNext(userRepository::save).
-                doOnNext(log::info).
+                doOnSuccess(log::info).
                 then(ServerResponse.ok().build());
     }
 

@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
 
@@ -18,6 +19,7 @@ import java.util.List;
 public class CustomUser {
     @Id
     private String id;
+    @NotNull
     @Email
     private String userName;
     @Size(min = 6)
